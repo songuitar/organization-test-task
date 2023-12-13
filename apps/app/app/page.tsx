@@ -1,14 +1,29 @@
-import styles from './page.module.scss';
+'use client'
 
-export default async function Index() {
+import {useTree} from "./hooks/data-fetching";
+import {EmployeeCard} from "./components/employee";
+
+
+
+
+export default function Index() {
+
+   const { tree, isLoading, isError } = useTree()
+
+
+
   /*
    * Replace the elements below with your own.
    *
    * Note: The corresponding styles are in the ./index.scss file.
    */
   return (
-    <div className={styles.page}>
-      <div>Organization</div>
-    </div>
+      <div className='treeContainer'>
+          {tree?.map(employee => {
+              return(
+                  <EmployeeCard key={employee.id} employee={employee}></EmployeeCard>
+              )
+          })}
+      </div>
   );
 }

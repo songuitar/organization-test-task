@@ -1,14 +1,24 @@
-import {ManyToOne, OneToMany, Column, PrimaryGeneratedColumn, Entity, BaseEntity} from "typeorm";
+import {
+  Column,
+  PrimaryGeneratedColumn,
+  Entity,
+  BaseEntity,
+  Tree,
+  TreeParent,
+  TreeChildren
+} from "typeorm";
+import {Employee} from "@organization-tree/api-interfaces";
 
+@Tree('closure-table')
 @Entity()
-export class EmployeeEntity extends BaseEntity {
+export class EmployeeEntity extends BaseEntity implements Employee {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => EmployeeEntity, {nullable: true})
+  @TreeParent()
   boss: EmployeeEntity;
 
-  @OneToMany(() => EmployeeEntity, subordinate => subordinate.boss)
+  @TreeChildren()
   subordinates: EmployeeEntity[]
 
   @Column()

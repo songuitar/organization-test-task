@@ -1,15 +1,20 @@
 import {Body, Controller, Get, Param, Patch, Post} from '@nestjs/common';
 import {EmployeeEntity} from "./entity/employee.entity";
-import {DeepPartial} from "typeorm";
+import {DataSource, DeepPartial} from "typeorm";
 import {BossChangeRequest} from "@organization-tree/api-interfaces";
+import {InjectDataSource} from "@nestjs/typeorm";
 
 
 @Controller('employee')
 export class AppController {
 
+  constructor(@InjectDataSource() private datasource: DataSource) {
+  }
+
   @Get('tree')
-  getTree() {
-    return EmployeeEntity.find({relations: {subordinates: true}})
+  async getTree() {
+    const repo = this.datasource.getTreeRepository(EmployeeEntity);
+    return repo.findTrees({depth: 512})
   }
 
   @Get()
