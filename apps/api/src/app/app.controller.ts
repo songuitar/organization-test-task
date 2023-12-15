@@ -1,20 +1,23 @@
-import {Body, Controller, Get, Param, Patch, Post} from '@nestjs/common';
+import {Body, Controller, Get, NotFoundException, Param, Patch, Post} from '@nestjs/common';
 import {EmployeeEntity} from "./entity/employee.entity";
-import {DataSource, DeepPartial} from "typeorm";
+import {DataSource, DeepPartial, TreeRepository} from "typeorm";
 import {BossChangeRequest} from "@organization-tree/api-interfaces";
 import {InjectDataSource} from "@nestjs/typeorm";
+import {EmployeeTreeManagerService} from "./service/employee-tree-manager.service";
 
 
 @Controller('employee')
 export class AppController {
 
-  constructor(@InjectDataSource() private datasource: DataSource) {
+  private readonly treeRepository: TreeRepository<EmployeeEntity>
+
+  constructor(@InjectDataSource() private datasource: DataSource, private employeeService: EmployeeTreeManagerService) {
+    this.treeRepository = this.datasource.getTreeRepository(EmployeeEntity)
   }
 
   @Get('tree')
   async getTree() {
-    const repo = this.datasource.getTreeRepository(EmployeeEntity);
-    return repo.findTrees({depth: 512})
+    return this.treeRepository.findTrees({depth: 512})
   }
 
   @Get()
@@ -24,18 +27,20 @@ export class AppController {
 
   @Post()
   createEmployee(@Body() employee: DeepPartial<EmployeeEntity>) {
-    return EmployeeEntity.create(employee).save()
+    return this.treeRepository.create(employee).save()
   }
 
   @Patch(':id')
-  async updateEmployee(@Param('id') id: string, @Body() employee: DeepPartial<EmployeeEntity> | BossChangeRequest) {
-    if ((employee as BossChangeRequest).newBossId  !== undefined) {
-        (employee as EmployeeEntity).boss = await EmployeeEntity.findOne({where: {id: (employee as BossChangeRequest).newBossId}})
-        delete (employee as BossChangeRequest).newBossId
-    }
-
-    return EmployeeEntity.update(id, employee as DeepPartial<EmployeeEntity>)
+  async updateEmployee(@Param('id') id: string, @Body() employee: DeepPartial<EmployeeEntity>) {
+    return this.treeRepository.update(id, employee as DeepPartial<EmployeeEntity>)
   }
 
-
+  @Patch(':id/boss')
+  async changeBoss(@Param('id') id: string, @Body() request: BossChangeRequest) {
+    const employee = await this.treeRepository.findOne({where: {id: Number(id)}})
+    if (!employee) {
+      throw new NotFoundException('cannot find an employee with id=' + id)
+    }
+    await this.employeeService.changeBoss(request.newBossId, employee)
+  }
 }

@@ -9,7 +9,7 @@ import {
 } from "typeorm";
 import {Employee} from "@organization-tree/api-interfaces";
 
-@Tree('closure-table')
+@Tree('materialized-path')
 @Entity()
 export class EmployeeEntity extends BaseEntity implements Employee {
   @PrimaryGeneratedColumn()
@@ -18,7 +18,7 @@ export class EmployeeEntity extends BaseEntity implements Employee {
   @TreeParent()
   boss: EmployeeEntity;
 
-  @TreeChildren()
+  @TreeChildren({cascade: ['update']})
   subordinates: EmployeeEntity[]
 
   @Column()
