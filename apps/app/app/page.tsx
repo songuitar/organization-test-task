@@ -1,29 +1,28 @@
 'use client'
 
 import {useTree} from "./hooks/data-fetching";
-import {EmployeeCard} from "./components/employee";
+import {Employee} from "@organization-tree/api-interfaces";
 
 
+function renderTree(tree: Employee[]) {
+  return (
+    <ul className="tree">
+      {tree?.map(employee => (
+        <li key={employee.id}>
+          <code>{employee.name}</code>
+          { renderTree(employee.subordinates)}
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 
 export default function Index() {
 
    const { tree, isLoading, isError } = useTree()
 
-
-
-  /*
-   * Replace the elements below with your own.
-   *
-   * Note: The corresponding styles are in the ./index.scss file.
-   */
   return (
-      <div className='treeContainer'>
-          {tree?.map(employee => {
-              return(
-                  <EmployeeCard key={employee.id} employee={employee}></EmployeeCard>
-              )
-          })}
-      </div>
+    renderTree(tree)
   );
 }
