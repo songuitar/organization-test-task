@@ -13,19 +13,12 @@ export class EmployeeTreeManagerService {
         this.treeRepository = this.datasource.getTreeRepository(EmployeeEntity)
     }
 
-    async changeBoss(newBossId: number, employee: EmployeeEntity) {
+    async changeBoss(newBossId: number | null, employee: EmployeeEntity) {
         const queryRunner = this.datasource.manager.connection.createQueryRunner();
 
         try {
             await queryRunner.connect();
             await queryRunner.startTransaction();
-
-            // Fetch the new boss
-            const newBoss = await queryRunner.manager.findOne(EmployeeEntity, {where: {id: newBossId}});
-
-            if (!newBoss) {
-                throw new NotFoundException('cannot find entity for newBossId=' + newBossId)
-            }
 
             // Fetch the current materialized path
             const [currentPath] = await queryRunner.query(
@@ -40,20 +33,24 @@ export class EmployeeTreeManagerService {
             }
 
             const oldPath = currentPath.mpath;
+            let newBossPath = ''
 
-            // Fetch the new boss's materialized path
-            const  [newBossPath] = await queryRunner.query(
-                `SELECT mpath
+            if (newBossId !== null) {
+                // Fetch the new boss's materialized path
+                newBossPath = (await queryRunner.query(
+                    `SELECT mpath
                  FROM employee_entity
                  WHERE id = $1`,
-                [newBossId]
-            );
+                    [newBossId]
+                ))[0].mpath
 
-            if (!newBossPath) {
-                throw new Error('Materialized path not found for the new boss')
+                if (!newBossPath) {
+                    throw new Error('Materialized path not found for the new boss')
+                }
+
             }
 
-            const newPath = [...newBossPath.mpath.split('.').filter(entry => entry.length>0), employee.id].join('.')
+            const newPath = [...newBossPath.split('.').filter(entry => entry.length>0), employee.id].join('.')
 
             // Update the materialized path for the current employee
             await queryRunner.query(

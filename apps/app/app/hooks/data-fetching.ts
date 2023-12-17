@@ -51,3 +51,9 @@ export async function createEmployee(name: string) {
     await mutate(treeActionId)
     await mutate(rootActionId)
 }
+
+export async function deleteEmployee(employeeId: number) {
+    await axios.delete(rootActionId + '/' + employeeId)
+    await mutate(treeActionId)
+    await mutate(rootActionId)
+}

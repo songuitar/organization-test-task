@@ -1,7 +1,15 @@
+.root {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+.form {
+  margin: 20px;
+}
 .treeContainer {
     display: flex;
 }
-
 .employee {
     padding: 20px;
     border: 1px solid black;
@@ -9,6 +17,7 @@
 .employee {
     margin-left: 20px;
 }
+
 .employee:first-child {
    margin-left: 0;
 }
