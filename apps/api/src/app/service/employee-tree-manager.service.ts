@@ -55,8 +55,8 @@ export class EmployeeTreeManagerService {
                 // Fetch the new boss's materialized path
                 newBossPath = (await queryRunner.query(
                     `SELECT mpath
-                 FROM employee_entity
-                 WHERE id = $1`,
+                     FROM employee_entity
+                     WHERE id = $1`,
                     [newBossId]
                 ))[0].mpath
 
@@ -66,26 +66,19 @@ export class EmployeeTreeManagerService {
             }
 
             if (newBossPath.split('.').includes(employee.id.toString())) {
-                console.log({
-                    newBossPath,newBossId,employeeId: employee.id
-                })
                 throw new LogicException(`Collision: ${newBossId} is a subordinate of ${employee.id}`)
             }
 
 
             const newPath = [...newBossPath.split('.')
-                .filter(entry => entry.length>0), employee.id]
+                .filter(entry => entry.length > 0), employee.id]
                 .join('.')
-
-            console.log({
-                subject: employee.id, newPath, newBossPath, oldPath
-            })
 
             // Update materialized path for subject employee
             await queryRunner.query(
                 `UPDATE employee_entity
                  SET bossId = $1,
-                     mpath = $2
+                     mpath  = $2
                  WHERE id = $3`,
                 [newBossId, newPath, employee.id]
             )
@@ -100,16 +93,16 @@ export class EmployeeTreeManagerService {
                     `${oldPath}%`]
             )
 
-            await queryRunner.commitTransaction();
+            await queryRunner.commitTransaction()
         } catch (error) {
-            await queryRunner.rollbackTransaction();
+            await queryRunner.rollbackTransaction()
             throw error
         } finally {
-            await queryRunner.release();
+            await queryRunner.release()
         }
     }
 
-    async deleteEmployee(employee : EmployeeEntity) {
+    async deleteEmployee(employee: EmployeeEntity) {
         for (const subordinate of employee.subordinates ?? []) {
             await this.changeBoss(employee.boss?.id ?? null, subordinate)
         }
