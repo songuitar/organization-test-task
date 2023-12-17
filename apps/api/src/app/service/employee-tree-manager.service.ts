@@ -4,6 +4,10 @@ import {InjectDataSource} from "@nestjs/typeorm";
 import {Injectable} from "@nestjs/common";
 
 
+export class LogicException extends Error {
+
+}
+
 @Injectable()
 export class EmployeeTreeManagerService {
 
@@ -23,6 +27,7 @@ export class EmployeeTreeManagerService {
 
     /**
      * Похоже что в typeorm так и не реализовали логику апдейта для material path и closure table так что пришлось апдейтить руками
+     * TODO: check if employee gets swapped with a boss and restrict this case
      */
     async changeBoss(newBossId: number | null, employee: EmployeeEntity) {
         const queryRunner = this.datasource.manager.connection.createQueryRunner();
@@ -32,18 +37,18 @@ export class EmployeeTreeManagerService {
             await queryRunner.startTransaction()
 
             // Fetch materialized path for subject employee
-            const [currentPath] = await queryRunner.query(
+            const oldPath: string = (await queryRunner.query(
                 `SELECT mpath
                  FROM employee_entity
                  WHERE id = $1`,
                 [employee.id]
-            )
+            ))[0].mpath
 
-            if (!currentPath) {
+
+            if (!oldPath) {
                 throw new Error('Materialized path not found for subject employee')
             }
 
-            const oldPath = currentPath.mpath;
             let newBossPath = ''
 
             if (newBossId !== null) {
@@ -58,10 +63,23 @@ export class EmployeeTreeManagerService {
                 if (!newBossPath) {
                     throw new Error('Materialized path not found for the new boss')
                 }
-
             }
 
-            const newPath = [...newBossPath.split('.').filter(entry => entry.length>0), employee.id].join('.')
+            if (newBossPath.split('.').includes(employee.id.toString())) {
+                console.log({
+                    newBossPath,newBossId,employeeId: employee.id
+                })
+                throw new LogicException(`Collision: ${newBossId} is a subordinate of ${employee.id}`)
+            }
+
+
+            const newPath = [...newBossPath.split('.')
+                .filter(entry => entry.length>0), employee.id]
+                .join('.')
+
+            console.log({
+                subject: employee.id, newPath, newBossPath, oldPath
+            })
 
             // Update materialized path for subject employee
             await queryRunner.query(
@@ -72,12 +90,14 @@ export class EmployeeTreeManagerService {
                 [newBossId, newPath, employee.id]
             )
 
-            // Update materialized path for all it's descendants
             await queryRunner.query(
                 `UPDATE employee_entity
                  SET mpath = REPLACE(mpath, $1, $2)
                  WHERE mpath LIKE $3`,
-                [oldPath, newPath, `${oldPath}%`]
+                [
+                    oldPath,
+                    newPath,
+                    `${oldPath}%`]
             )
 
             await queryRunner.commitTransaction();

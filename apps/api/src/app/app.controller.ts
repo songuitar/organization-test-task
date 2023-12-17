@@ -12,7 +12,7 @@ import {
 import {EmployeeEntity} from "./entity/employee.entity";
 import {DeepPartial} from "typeorm";
 import {BossChangeRequest} from "@organization-tree/api-interfaces";
-import {EmployeeTreeManagerService} from "./service/employee-tree-manager.service";
+import {EmployeeTreeManagerService, LogicException} from "./service/employee-tree-manager.service";
 
 
 @Controller('employee')
@@ -58,6 +58,12 @@ export class AppController {
       throw new NotFoundException('cannot find an employee with id=' + id)
     }
 
-    await this.employeeService.changeBoss(request.newBossId, employee)
+    try {
+      await this.employeeService.changeBoss(request.newBossId, employee)
+    } catch (e) {
+      if (e instanceof LogicException) {
+        throw new BadRequestException(e.message)
+      }
+    }
   }
 }

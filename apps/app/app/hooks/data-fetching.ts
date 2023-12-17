@@ -39,7 +39,7 @@ export function useList() {
 export async function changeBoss(newBossId: number, employeeId: number) {
     await axios.patch(`http://localhost:3000/api/employee/${employeeId}/boss`, {newBossId})
         .catch(error => {
-            if (error?.response?.status === 400) {
+            if (error?.response?.data?.message) {
                 alert(error.response.data.message)
             }
         })
