@@ -17,3 +17,13 @@ export function useTree() {
         isError: error
     }
 }
+
+export function useList() {
+    const { data, error, isLoading } = useSWR(`http://localhost:3000/api/employee`, fetcher)
+
+    return {
+        list: data as Employee[],
+        isLoading,
+        isError: error
+    }
+}

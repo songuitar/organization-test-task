@@ -51,6 +51,7 @@
 .tree li:last-child:before {right: 50%;}
 
 .tree code, .tree span {
+  cursor: pointer;
   border: solid .1em #666;
   border-radius: .2em;
   display: inline-block;

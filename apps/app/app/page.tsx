@@ -1,58 +1,66 @@
 'use client'
 
-import {useTree} from "./hooks/data-fetching";
+import {useList, useTree} from "./hooks/data-fetching";
 import {Employee} from "@organization-tree/api-interfaces";
-import {Item, Menu, useContextMenu} from "react-contexify";
+import {Item, Menu, Submenu, useContextMenu} from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
-
+import axios from 'axios';
 
 function renderTree(tree: Employee[], lvl: number = 0) {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { show } = useContextMenu({
-    id: 'Menu',
-  });
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const contextMenu = useContextMenu({
+        id: 'Menu',
+    }).show;
 
 
-  return (
-      <ul className={lvl === 0 ? "tree" : ''}>
-        {tree?.map(employee => (
-          <li key={employee.id} onClick={(event) => {
-            event.stopPropagation()
+    return (
+        <ul className={lvl === 0 ? "tree" : ''}>
+            {tree?.map(employee => (
+                <li key={employee.id} onClick={(event) => {
+                    event.stopPropagation()
 
-            show({
-              event,
-              props: {
-                employeeId: employee.id
-              }
-            })
-          }}>
-            <code>{employee.name + " (" + employee.id + ")"}</code>
-            { renderTree(employee.subordinates, lvl + 1)}
-          </li>
-        ))}
-      </ul>
-  )
+                    contextMenu({
+                        event,
+                        props: {
+                            employeeId: employee.id
+                        }
+                    })
+                }}>
+                    <code>{employee.name + " (" + employee.id + ")"}</code>
+                    {renderTree(employee.subordinates, lvl + 1)}
+                </li>
+            ))}
+        </ul>
+    )
 }
 
 
 export default function Index() {
 
-  const { tree, isLoading, isError } = useTree()
+    const {tree, isLoading, isError} = useTree()
+    const {list} = useList()
 
-  function remove({ event, props }){
-    console.log(props);
-  }
-  function changeBoss({ event, props }){
-    console.log(props);
-  }
+    function remove({props}) {
+        console.log(props);
+    }
 
-  return (
-    <>
-      {renderTree(tree)}
-      <Menu id='Menu'>
-        <Item onClick={remove}>Remove</Item>
-        <Item onClick={changeBoss}>Change Boss</Item>
-      </Menu>
-    </>
-  );
+    async function onNewBossSelect(newBossId: number, employeeId: number) {
+        await axios.patch(`http://localhost:3000/api/employee/${employeeId}/boss`, {newBossId})
+    }
+
+    return (
+        <>
+            {renderTree(tree)}
+            <Menu id='Menu'>
+                <Item onClick={remove}>Remove</Item>
+                <Submenu label="Change boss to">
+                    {list?.map(employee => (
+                        <Item key={employee.id} onClick={({props}) => onNewBossSelect(employee.id, props.employeeId)}>{employee.name + " (" + employee.id + ")"}</Item>
+                    ))}
+                </Submenu>
+            </Menu>
+        </>
+    );
 }
+
+

@@ -42,7 +42,7 @@ export class EmployeeTreeManagerService {
             const oldPath = currentPath.mpath;
 
             // Fetch the new boss's materialized path
-            const [newBossPath] = await queryRunner.query(
+            const  [newBossPath] = await queryRunner.query(
                 `SELECT mpath
                  FROM employee_entity
                  WHERE id = $1`,

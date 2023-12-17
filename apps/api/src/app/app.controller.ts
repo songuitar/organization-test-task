@@ -37,6 +37,8 @@ export class AppController {
 
   @Patch(':id/boss')
   async changeBoss(@Param('id') id: string, @Body() request: BossChangeRequest) {
+    console.log({request})
+
     const employee = await this.treeRepository.findOne({where: {id: Number(id)}})
     if (!employee) {
       throw new NotFoundException('cannot find an employee with id=' + id)
