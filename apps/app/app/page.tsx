@@ -1,6 +1,6 @@
 'use client'
 
-import {changeBoss, useList, useTree} from "./hooks/data-fetching";
+import {changeBoss, createEmployee, useList, useTree} from "./hooks/data-fetching";
 import {Employee} from "@organization-tree/api-interfaces";
 import {Item, Menu, Submenu, useContextMenu} from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
@@ -48,8 +48,23 @@ export default function Index() {
         await changeBoss(newBossId, employeeId)
     }
 
+    function handleSubmit(event) {
+        event.preventDefault();
+        const data = new FormData(event.target);
+
+        createEmployee(data.get('name') as string)
+    }
+
     return (
         <>
+            <div>
+                <form onSubmit={handleSubmit}>
+                    <label htmlFor="name">Name</label>
+                    <input id="name" name="name" type="text" required={true}/>
+
+                    <button type={"submit"}>Send data!</button>
+                </form>
+            </div>
             {renderTree(tree)}
             <Menu id='Menu'>
                 <Item onClick={remove}>Remove</Item>
