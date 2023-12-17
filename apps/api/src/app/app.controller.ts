@@ -10,9 +10,8 @@ import {
   Post
 } from '@nestjs/common';
 import {EmployeeEntity} from "./entity/employee.entity";
-import {DataSource, DeepPartial, TreeRepository} from "typeorm";
+import {DeepPartial, TreeRepository} from "typeorm";
 import {BossChangeRequest} from "@organization-tree/api-interfaces";
-import {InjectDataSource} from "@nestjs/typeorm";
 import {EmployeeTreeManagerService} from "./service/employee-tree-manager.service";
 
 
@@ -21,18 +20,17 @@ export class AppController {
 
   private readonly treeRepository: TreeRepository<EmployeeEntity>
 
-  constructor(@InjectDataSource() private datasource: DataSource, private employeeService: EmployeeTreeManagerService) {
-    this.treeRepository = this.datasource.getTreeRepository(EmployeeEntity)
+  constructor(private employeeService: EmployeeTreeManagerService) {
   }
 
   @Get('tree')
   async getTree() {
-    return this.treeRepository.findTrees({depth: 512})
+    return this.employeeService.getTrees()
   }
 
   @Get()
   getList() {
-    return EmployeeEntity.find()
+    return this.employeeService.getList()
   }
 
   @Post()
@@ -42,16 +40,12 @@ export class AppController {
 
   @Delete(':id')
   async deleteEmployee(@Param('id') id: string) {
-    const employee = await this.treeRepository.findOne({where: {id: Number(id)}, relations: ['subordinates']})
+    const employee = await this.employeeService.findOne(Number(id))
     if (!employee) {
       throw new NotFoundException('cannot find an employee with id=' + id)
     }
 
-    for (const subordinate of employee.subordinates ?? []) {
-      await this.employeeService.changeBoss(employee.boss?.id ?? null, subordinate)
-    }
-
-    return this.treeRepository.delete({id: Number(id)})
+    return this.employeeService.deleteEmployee(employee)
   }
 
   @Patch(':id/boss')
@@ -61,12 +55,10 @@ export class AppController {
       throw new BadRequestException('cannot make an employee a boss to itself')
     }
 
-    const employee = await this.treeRepository.findOne({where: {id: Number(id)}})
+    const employee = await this.employeeService.findOne(Number(id))
     if (!employee) {
       throw new NotFoundException('cannot find an employee with id=' + id)
     }
     await this.employeeService.changeBoss(request.newBossId, employee)
   }
-
-
 }
