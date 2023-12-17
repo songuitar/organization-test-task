@@ -10,15 +10,13 @@ import {
   Post
 } from '@nestjs/common';
 import {EmployeeEntity} from "./entity/employee.entity";
-import {DeepPartial, TreeRepository} from "typeorm";
+import {DeepPartial} from "typeorm";
 import {BossChangeRequest} from "@organization-tree/api-interfaces";
 import {EmployeeTreeManagerService} from "./service/employee-tree-manager.service";
 
 
 @Controller('employee')
 export class AppController {
-
-  private readonly treeRepository: TreeRepository<EmployeeEntity>
 
   constructor(private employeeService: EmployeeTreeManagerService) {
   }
@@ -35,7 +33,7 @@ export class AppController {
 
   @Post()
   createEmployee(@Body() employee: DeepPartial<EmployeeEntity>) {
-    return this.treeRepository.create(employee).save()
+    return this.employeeService.create(employee)
   }
 
   @Delete(':id')
@@ -59,6 +57,7 @@ export class AppController {
     if (!employee) {
       throw new NotFoundException('cannot find an employee with id=' + id)
     }
+
     await this.employeeService.changeBoss(request.newBossId, employee)
   }
 }

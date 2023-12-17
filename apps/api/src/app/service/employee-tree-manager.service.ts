@@ -1,4 +1,4 @@
-import {DataSource, TreeRepository} from "typeorm";
+import {DataSource, DeepPartial, TreeRepository} from "typeorm";
 import {EmployeeEntity} from "../entity/employee.entity";
 import {InjectDataSource} from "@nestjs/typeorm";
 import {Injectable} from "@nestjs/common";
@@ -15,6 +15,10 @@ export class EmployeeTreeManagerService {
 
     findOne(id: number) {
         return this.treeRepository.findOne({where: {id: Number(id)}, relations: ['subordinates']})
+    }
+
+    create(employee: DeepPartial<EmployeeEntity>) {
+        return this.treeRepository.create(employee).save()
     }
 
     /**
