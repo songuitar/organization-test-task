@@ -1,4 +1,4 @@
-import {Body, Controller, Get, NotFoundException, Param, Patch, Post} from '@nestjs/common';
+import {BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post} from '@nestjs/common';
 import {EmployeeEntity} from "./entity/employee.entity";
 import {DataSource, DeepPartial, TreeRepository} from "typeorm";
 import {BossChangeRequest} from "@organization-tree/api-interfaces";
@@ -37,7 +37,10 @@ export class AppController {
 
   @Patch(':id/boss')
   async changeBoss(@Param('id') id: string, @Body() request: BossChangeRequest) {
-    console.log({request})
+
+    if (Number(id) === request.newBossId) {
+      throw new BadRequestException('cannot make an employee a boss to itself')
+    }
 
     const employee = await this.treeRepository.findOne({where: {id: Number(id)}})
     if (!employee) {

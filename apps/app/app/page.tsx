@@ -1,10 +1,10 @@
 'use client'
 
-import {useList, useTree} from "./hooks/data-fetching";
+import {changeBoss, useList, useTree} from "./hooks/data-fetching";
 import {Employee} from "@organization-tree/api-interfaces";
 import {Item, Menu, Submenu, useContextMenu} from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
-import axios from 'axios';
+
 
 function renderTree(tree: Employee[], lvl: number = 0) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -45,7 +45,7 @@ export default function Index() {
     }
 
     async function onNewBossSelect(newBossId: number, employeeId: number) {
-        await axios.patch(`http://localhost:3000/api/employee/${employeeId}/boss`, {newBossId})
+        await changeBoss(newBossId, employeeId)
     }
 
     return (
