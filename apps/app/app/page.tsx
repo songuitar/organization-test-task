@@ -1,6 +1,6 @@
 'use client'
 
-import {changeBoss, createEmployee, deleteEmployee, useList, useTree} from "./hooks/data-fetching";
+import {changeBoss, createEmployee, deleteEmployee, useList, useTree} from "./api/server-state";
 import {Employee} from "@organization-tree/api-interfaces";
 import {Item, Menu, Submenu, useContextMenu} from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
@@ -36,7 +36,6 @@ function renderTree(tree: Employee[], lvl: number = 0) {
 
 
 export default function Index() {
-
     const {tree} = useTree()
     const {list} = useList()
 
@@ -66,10 +65,13 @@ export default function Index() {
             </div>
             {renderTree(tree)}
             <Menu id='Menu'>
-                <Item onClick={({props}) => {remove(props.employeeId)}}>Remove</Item>
+                <Item onClick={({props}) => {
+                    remove(props.employeeId)
+                }}>Remove</Item>
                 <Submenu label="Change boss to">
                     {list?.map(employee => (
-                        <Item key={employee.id} onClick={({props}) => onNewBossSelect(employee.id, props.employeeId)}>{employee.name + " (" + employee.id + ")"}</Item>
+                        <Item key={employee.id}
+                              onClick={({props}) => onNewBossSelect(employee.id, props.employeeId)}>{employee.name + " (" + employee.id + ")"}</Item>
                     ))}
                 </Submenu>
             </Menu>
